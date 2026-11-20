@@ -27,7 +27,7 @@ def main(**kwargs):
         graph_list=DataUtils.load_graph_list(purpose=purpose,graph_type=graph_type,n_node=n_node)
         TR_label_list=[]
         for graph in tqdm(graph_list,desc=f"Compute {graph_type} TR_label_list..."):
-            graph_df=GraphUtils.convert_nx_graph_to_df(graph=graph,add_bidirect=True)
+            graph_df=GraphUtils.convert_nx_graph_to_df(graph=graph)
             TR_label=GraphUtils.get_TR_label_using_Time_Centric(graph_df=graph_df,batch_size=batch_size)
             TR_label_list.append(TR_label)
         DataUtils.save_TR_label_list_to_pt(
@@ -43,7 +43,7 @@ if __name__=="__main__":
     Execute app
     """
     parser=argparse.ArgumentParser()
-    parser.add_argument("--purpose",type=str,choices=["train","val","test"],default="CollegeMsg")
+    parser.add_argument("--purpose",type=str,choices=["train","val","test"],default="train")
     parser.add_argument("--n_node",type=int,choices=[20,50,100,500,1000],default=20)
     parser.add_argument("--batch_size",type=int,choices=[10,20,30,100,200],default=10)
     args=parser.parse_args()

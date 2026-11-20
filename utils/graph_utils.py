@@ -255,10 +255,7 @@ class GraphAlgorithm:
 
 class GraphUtils:
     @staticmethod
-    def convert_nx_graph_to_df(
-            graph:nx.Graph,
-            add_bidirect:bool=False # True면 edge의 역방향도 추가
-        )->pd.DataFrame:
+    def convert_nx_graph_to_df(graph:nx.Graph)->pd.DataFrame:
         """
         Return:
             DataFrame columns:
@@ -275,12 +272,6 @@ class GraphUtils:
                     "i":dst+1,
                     "t":t,
                 })
-                if add_bidirect:
-                    edge_event_list.append({
-                        "u":dst+1,
-                        "i":src+1,
-                        "t":t,
-                    })
 
         # timestamp 오름차순 정렬
         graph_df=pd.DataFrame(edge_event_list)
@@ -301,6 +292,8 @@ class GraphUtils:
         )->list[tuple[int,int,int]]:
         """
         Convert a batch to directed events, preserving input order.
+        
+        edge의 역방향도 추가해서 양방향 정보 유지.
         """
         eventstream=[]
         for source,destination,timestamp in zip(
@@ -310,6 +303,7 @@ class GraphUtils:
                 destination=int(destination)
                 timestamp=int(timestamp)
                 eventstream.append((source,destination,timestamp))
+                eventstream.append((destination,source,timestamp))
         return eventstream
 
     @staticmethod
@@ -335,9 +329,13 @@ class GraphUtils:
             dtype=torch.bool
         )
 
-        ### compute TR_label
+        ### compute TR_label (양방향)
         for seq_idx,(src,dst,event_t,_) in enumerate(graph_loader):
-            eventstream=GraphUtils.convert_batch_to_eventstream(src=src,dst=dst,event_t=event_t)
+            eventstream=GraphUtils.convert_batch_to_eventstream(
+                src=src,
+                dst=dst,
+                event_t=event_t
+            )
             gamma_table=GraphAlgorithm.compute_TR_using_Time_Centric(
                 eventstream=eventstream,
                 n_node=n_node,

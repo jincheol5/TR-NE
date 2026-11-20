@@ -31,7 +31,7 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("--n_node",type=int,choices=[20,50,100,500,1000],default=20)
     parser.add_argument("--n_graph",type=int,choices=[5,100],default=5)
-    parser.add_argument("--purpose",type=str,choices=["train","val","test"],default="CollegeMsg")
+    parser.add_argument("--purpose",type=str,choices=["train","val","test"],default="train")
     args=parser.parse_args()
     app_config={
         "n_node":args.n_node,
