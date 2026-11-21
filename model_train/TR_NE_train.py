@@ -135,7 +135,8 @@ class TR_NE_Trainer:
                     ) # [B,]
 
                     ### Loss
-                    criterion=nn.BCEWithLogitsLoss()
+                    label_weight=TrainUtils.get_label_weight(label=label)
+                    criterion=nn.BCEWithLogitsLoss(weight=label_weight)
                     loss=criterion(pred_logit,label)
 
                     ### Backward

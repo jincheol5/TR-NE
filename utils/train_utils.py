@@ -99,3 +99,19 @@ class TrainUtils:
             batch_dst_label=batch_TR_label[source,dst].to(torch.float32) # [B,]
             label_loader.append(batch_dst_label)
         return label_loader # list of [B,] float32 tensor
+
+    @staticmethod
+    def get_label_weight(label:torch.Tensor):
+        """
+        class가 모두 1 or 0이면 동일 가중치.
+        """
+        n_pos=(label==1).sum()
+        n_neg=(label==0).sum()
+        batch_size=label.numel()
+        if n_pos>0 and n_neg>0:
+            pos_weight=batch_size/(2*n_pos)
+            neg_weight=batch_size/(2*n_neg)
+            label_weight=torch.where(label==1,pos_weight,neg_weight)
+        else:
+            label_weight=torch.ones_like(label)
+        return label_weight
