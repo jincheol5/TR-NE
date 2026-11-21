@@ -1,5 +1,9 @@
 import torch
-from sklearn.metrics import average_precision_score,roc_auc_score
+from sklearn.metrics import (
+    average_precision_score,
+    balanced_accuracy_score,
+    f1_score
+)
 
 class MetricUtils:
     @staticmethod
@@ -19,6 +23,44 @@ class MetricUtils:
         return acc
 
     @staticmethod
+    def compute_pos_recall(
+            pred_logit:torch.Tensor,
+            label:torch.Tensor
+        )->float:
+        """
+        실제 양성 중 양성으로 분류된 비율. 실제 양성이 없으면 NaN.
+        """
+        pred=torch.sigmoid(pred_logit.detach().reshape(-1))>=0.5
+        positive=label.reshape(-1)==1
+        return pred[positive].float().mean().item()
+
+    @staticmethod
+    def compute_neg_recall(
+            pred_logit:torch.Tensor,
+            label:torch.Tensor
+        )->float:
+        """
+        실제 음성 중 음성으로 분류된 비율. 실제 음성이 없으면 NaN.
+        """
+        pred=torch.sigmoid(pred_logit.detach().reshape(-1))>=0.5
+        negative=label.reshape(-1)==0
+        return (~pred[negative]).float().mean().item()
+
+    @staticmethod
+    def compute_balanced_ACC(
+            pred_logit:torch.Tensor,
+            label:torch.Tensor
+        )->float:
+        """
+        양성과 음성 재현율의 평균. 두 클래스가 모두 있어야 계산한다.
+        """
+        pred=(torch.sigmoid(pred_logit.detach())>=0.5).cpu().reshape(-1).numpy()
+        true_label=label.detach().cpu().reshape(-1).numpy()
+        if not ((true_label==0).any() and (true_label==1).any()):
+            return float("nan")
+        return float(balanced_accuracy_score(true_label,pred))
+
+    @staticmethod
     def compute_AP(
             pred_logit:torch.Tensor,
             label:torch.Tensor
@@ -36,19 +78,15 @@ class MetricUtils:
         return float(average_precision_score(true_label,pred_score))
 
     @staticmethod
-    def compute_AUC(
+    def compute_f1(
             pred_logit:torch.Tensor,
             label:torch.Tensor
-        ):
+        )->float:
         """
-        ROC-AUC
-        -> 실제 연결에 가짜 연결보다 높은 점수를 주는 정도 측정.
-        값 범위: 0 ~ 1
-            1.0: 실제 연결과 가짜 연결의 순위를 완벽하게 구분.
-            0.5: 무작위 수준의 구분 능력.
-            0.5 미만: 실제 연결에 오히려 더 낮은 점수를 주는 경향.
-            0.0: 모든 실제 연결이 모든 가짜 연결보다 낮은 점수를 받음.
+        양성과 음성 F1의 평균. 두 클래스가 모두 있어야 계산한다.
         """
-        pred_score=torch.sigmoid(pred_logit.detach()).cpu().reshape(-1).numpy()
+        pred=(torch.sigmoid(pred_logit.detach())>=0.5).cpu().reshape(-1).numpy()
         true_label=label.detach().cpu().reshape(-1).numpy()
-        return float(roc_auc_score(true_label,pred_score))
+        if not ((true_label==0).any() and (true_label==1).any()):
+            return float("nan")
+        return float(f1_score(true_label,pred,labels=[0,1],average="macro",zero_division=0))

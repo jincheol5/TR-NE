@@ -155,7 +155,15 @@ class TGN_Trainer:
                 **kwargs
             )
             val_acc=val_result["acc"]
+            val_ap=val_result["ap"]
+            val_pos_recall=val_result["pos_recall"]
+            val_neg_recall=val_result["neg_recall"]
+            val_balanced_acc=val_result["balanced_acc"]
             print(f"{epoch+1} epoch  Validate ACC: {val_acc}")
+            print(f"{epoch+1} epoch  Validate AP: {val_ap}")
+            print(f"{epoch+1} epoch  Validate Pos Recall: {val_pos_recall}")
+            print(f"{epoch+1} epoch  Validate Neg Recall: {val_neg_recall}")
+            print(f"{epoch+1} epoch  Validate Balanced ACC: {val_balanced_acc}")
 
             """
             Check Early Stop
@@ -168,7 +176,11 @@ class TGN_Trainer:
                 best_metrics={
                     "best_epoch":epoch+1,
                     "best_val_loss":val_loss,
-                    "best_val_acc":val_acc
+                    "best_val_acc":val_acc,
+                    "best_val_ap":val_ap,
+                    "best_val_pos_recall":val_pos_recall,
+                    "best_val_neg_recall":val_neg_recall,
+                    "best_val_balanced_acc":val_balanced_acc
                 }
             print(f"{epoch+1} epoch Validate Loss: {val_loss}")
 
@@ -220,6 +232,10 @@ class TGN_Trainer:
         """
         loss_list=[]
         acc_list=[]
+        ap_list=[]
+        pos_recall_list=[]
+        neg_recall_list=[]
+        balanced_acc_list=[]
         with torch.no_grad():
             for val_graph,val_loader,val_TR_label,sources in tqdm(
                     zip(val_graph_list,val_loader_list,val_TR_label_list,val_sources),
@@ -228,6 +244,7 @@ class TGN_Trainer:
                 ):
                 graph_loss_list=[]
                 graph_acc_list=[]
+                graph_ap_list=[]
                 for source in sources:
                     ### set model.graph
                     graph_df=GraphUtils.convert_nx_graph_to_df(graph=val_graph)
@@ -313,14 +330,29 @@ class TGN_Trainer:
                     src_label=torch.cat(src_label_list)
                     graph_loss_list.append(torch.stack(src_loss_list).mean().item())
                     graph_acc_list.append(MetricUtils.compute_ACC(pred_logit=src_pred_logit,label=src_label))
+                    graph_ap_list.append(MetricUtils.compute_AP(pred_logit=src_pred_logit,label=src_label))
+                    pos_recall_list.append(
+                        MetricUtils.compute_pos_recall(pred_logit=src_pred_logit,label=src_label)
+                    )
+                    neg_recall_list.append(
+                        MetricUtils.compute_neg_recall(pred_logit=src_pred_logit,label=src_label)
+                    )
+                    balanced_acc_list.append(
+                        MetricUtils.compute_balanced_ACC(pred_logit=src_pred_logit,label=src_label)
+                    )
 
                 # total val metric
                 loss_list+=graph_loss_list
                 acc_list+=graph_acc_list
+                ap_list+=graph_ap_list
 
         return {
             "loss":float(np.mean(loss_list)),
-            "acc":float(np.mean(acc_list))
+            "acc":float(np.mean(acc_list)),
+            "ap":float(np.mean(ap_list)),
+            "pos_recall":float(np.mean(pos_recall_list)),
+            "neg_recall":float(np.mean(neg_recall_list)),
+            "balanced_acc":float(np.mean(balanced_acc_list)),
         }
 
     @staticmethod
@@ -353,6 +385,10 @@ class TGN_Trainer:
         Test model
         """
         acc_list=[]
+        ap_list=[]
+        pos_recall_list=[]
+        neg_recall_list=[]
+        balanced_acc_list=[]
         with torch.no_grad():
             for test_graph,test_loader,test_TR_label,sources in tqdm(
                     zip(test_graph_list,test_loader_list,test_TR_label_list,test_sources),
@@ -360,6 +396,7 @@ class TGN_Trainer:
                     desc=f"Test..."
                 ):
                 graph_acc_list=[]
+                graph_ap_list=[]
                 for source in sources:
                     ### set model.graph
                     graph_df=GraphUtils.convert_nx_graph_to_df(graph=test_graph)
@@ -438,10 +475,25 @@ class TGN_Trainer:
                     src_pred_logit=torch.cat(src_pred_logit_list)
                     src_label=torch.cat(src_label_list)
                     graph_acc_list.append(MetricUtils.compute_ACC(pred_logit=src_pred_logit,label=src_label))
+                    graph_ap_list.append(MetricUtils.compute_AP(pred_logit=src_pred_logit,label=src_label))
+                    pos_recall_list.append(
+                        MetricUtils.compute_pos_recall(pred_logit=src_pred_logit,label=src_label)
+                    )
+                    neg_recall_list.append(
+                        MetricUtils.compute_neg_recall(pred_logit=src_pred_logit,label=src_label)
+                    )
+                    balanced_acc_list.append(
+                        MetricUtils.compute_balanced_ACC(pred_logit=src_pred_logit,label=src_label)
+                    )
 
                 # total val metric
                 acc_list+=graph_acc_list
+                ap_list+=graph_ap_list
 
         return {
-            "acc":float(np.mean(acc_list))
+            "acc":float(np.mean(acc_list)),
+            "ap":float(np.mean(ap_list)),
+            "pos_recall":float(np.mean(pos_recall_list)),
+            "neg_recall":float(np.mean(neg_recall_list)),
+            "balanced_acc":float(np.mean(balanced_acc_list)),
         }
