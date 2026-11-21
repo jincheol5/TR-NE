@@ -1,5 +1,5 @@
-from model import TGAT,TGN
-from model_train import Model_Trainer,TGN_Trainer
+from model import TGAT,TGN,TR_NE
+from model_train import Model_Trainer,TGN_Trainer,TR_NE_Trainer
 
 """
 << 공통 하이퍼 파라미터 >>
@@ -56,12 +56,14 @@ TPNet
 
 MODEL_REGISTRY={
     "TGAT":TGAT,
-    "TGN":TGN
+    "TGN":TGN,
+    "TR-NE":TR_NE
 }
 
 TRAINER_REGISTRY={
     "TGAT":Model_Trainer,
-    "TGN":TGN_Trainer
+    "TGN":TGN_Trainer,
+    "TR-NE":TR_NE_Trainer
 }
 
 COMMON_MODEL_CONFIG={
@@ -100,6 +102,12 @@ SPECIFIC_MODEL_CONFIG={
         "time_decay_coef":1e-7,
         "n_last_event":20,
         "mlp_mixer_n_layer":2
+    },
+    "TR-NE":{
+        "msg_dim":100,
+        "mem_dim":172,
+        "aggr_fn":"last",
+        "msg_fn":"mlp"
     }
 }
 
@@ -140,6 +148,13 @@ MODEL_PARAM={
         "latent_dim","embed_dim", 
         "random_ft_dim",
         "walk_len","time_decay_coef","n_last_event","mlp_mixer_n_layer"
+    ),
+    "TR-NE":(
+        "node_dim","edge_dim","time_dim",
+        "latent_dim","embed_dim",
+        "n_layer","n_neighbor","n_head",
+        "msg_dim","mem_dim",
+        "aggr_fn","msg_fn"
     )
 }
 

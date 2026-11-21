@@ -1,0 +1,65 @@
+import torch
+import torch.nn as nn
+from typing import Literal
+
+class Last_State(nn.Module):
+    def __init__(self,n_node:int):
+        """
+        Model의 Intermediate Result 저장
+        """
+        super().__init__()
+        self.n_node=n_node
+        self.register_buffer(
+            "last_state",
+            torch.zeros(self.n_node+1),
+        )
+        self.init_last_state()
+
+    def init_last_state(self,source:int|None=None):
+        """
+        initialize last_state, which should be called at the start of each epoch
+        """
+        self.last_state.data.zero_()
+        if source is not None:
+            self.last_state[source]=1.0
+
+    def last_state_detach(self):
+        self.last_state.detach_()
+
+    def get_last_state(self,
+            node:torch.Tensor|None=None
+        ):
+        if node is None:
+            return self.last_state
+        else:
+            return self.last_state[node]
+
+    def update_last_state(self,
+            dst:torch.Tensor,
+            pred_logit:torch.Tensor,
+            label_state:torch.Tensor|None=None,
+            purpose:Literal["train","test"]=f"test",
+            p:float=0.5
+        ):
+        """
+        purpose = train인 경우 p 비율로 Teacher Forcing 적용.
+        purpose = test인 경우 그대로 업데이트.
+
+        Input:
+            dst: [B,]
+            pred_logit:  [B,]
+            label_state: [B,]
+            purpose: "train" or "test"
+            p: Teacher Forcing 적용 확률
+        """
+        ### Prediction State
+        pred_state=(torch.sigmoid(pred_logit)>=0.5)
+
+        ### Teacher Forcing
+        if purpose=="train":
+            teacher_mask=torch.rand(pred_state.shape,device=pred_state.device)<p
+            pred_state=torch.where(teacher_mask,label_state,pred_state)
+
+        ### Update Last State
+        pred_state=pred_state.to(dtype=torch.float32)
+        self.last_state[dst]=pred_state

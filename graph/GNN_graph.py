@@ -41,6 +41,7 @@ class GNN_Graph:
         else:
             self.node_ft=torch.as_tensor(node_ft,dtype=torch.float32)
         self.has_source_info=False
+        self.has_last_state=False
 
     def set_source_info(self,source:int):
         """
@@ -53,6 +54,16 @@ class GNN_Graph:
         self.node_ft=torch.cat((source_info,node_ft),dim=1)
         self.node_dim=self.node_ft.size(1)
         self.has_source_info=True
+
+    def set_last_state(self,last_state:torch.Tensor):
+        """
+        Input: [N+1,]
+        """
+        last_state=last_state.unsqueeze(-1) # [N+1,1]
+        node_ft=self.node_ft[:,1:] if self.has_last_state else self.node_ft
+        self.node_ft=torch.cat((last_state,node_ft),dim=1)
+        self.node_dim=self.node_ft.size(1)
+        self.has_last_state=True
 
     def set_edge_ft(self,
             edge_ft:np.ndarray=None,
