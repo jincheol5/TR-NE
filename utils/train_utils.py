@@ -61,8 +61,8 @@ class EarlyStopper:
         self.patience_count=0
         self.best_loss=val_loss
         self.best_state={
-            key: value.detach().clone()
-            for key, value in model.state_dict().items()
+            key:value.detach().clone()
+            for key,value in model.state_dict().items()
         }
         return model
 

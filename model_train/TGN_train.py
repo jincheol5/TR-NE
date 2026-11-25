@@ -55,7 +55,6 @@ class TGN_Trainer:
         Train model
         """
         n_node=kwargs["n_node"]
-        best_metrics=None
         for epoch in tqdm(range(kwargs["epoch"]),desc=f"Model Training..."):
             for train_graph,train_loader,train_TR_label in tqdm(
                     zip(train_graph_list,train_loader_list,train_TR_label_list),
@@ -155,40 +154,32 @@ class TGN_Trainer:
                 val_sources=val_sources,
                 **kwargs
             )
-            val_acc=val_result["acc"]
-            val_ap=val_result["ap"]
-            val_pos_recall=val_result["pos_recall"]
-            val_neg_recall=val_result["neg_recall"]
-            val_balanced_acc=val_result["balanced_acc"]
-            print(f"{epoch+1} epoch  Validate ACC: {val_acc}")
-            print(f"{epoch+1} epoch  Validate AP: {val_ap}")
-            print(f"{epoch+1} epoch  Validate Pos Recall: {val_pos_recall}")
-            print(f"{epoch+1} epoch  Validate Neg Recall: {val_neg_recall}")
-            print(f"{epoch+1} epoch  Validate Balanced ACC: {val_balanced_acc}")
+            print(f"{epoch+1} epoch  Validate ACC: {val_result['acc']}")
+            print(f"{epoch+1} epoch  Validate AP: {val_result['ap']}")
+            print(f"{epoch+1} epoch  Validate Positive Recall: {val_result['pos_recall']}")
+            print(f"{epoch+1} epoch  Validate Negative Recall: {val_result['neg_recall']}")
+            print(f"{epoch+1} epoch  Validate Balanced ACC: {val_result['balanced_acc']}")
+
+            """
+            MLFlow tracking
+            """
+            if kwargs.get("use_mlflow", False):
+                mlflow.log_metrics({
+                    "val_loss":val_result["loss"],
+                    "val_acc":val_result["acc"],
+                    "val_ap":val_result["ap"],
+                    "val_pos_recall":val_result["pos_recall"],
+                    "val_neg_recall":val_result["neg_recall"],
+                    "val_balanced_acc":val_result["balanced_acc"]
+                },step=epoch+1)
 
             """
             Check Early Stop
             """
-            val_loss=val_result["loss"]
-            # check best_metrics
-            if np.isfinite(val_loss) and (
-                    best_metrics is None or val_loss<best_metrics["best_val_loss"]
-                ):
-                best_metrics={
-                    "best_epoch":epoch+1,
-                    "best_val_loss":val_loss,
-                    "best_val_acc":val_acc,
-                    "best_val_ap":val_ap,
-                    "best_val_pos_recall":val_pos_recall,
-                    "best_val_neg_recall":val_neg_recall,
-                    "best_val_balanced_acc":val_balanced_acc
-                }
-            print(f"{epoch+1} epoch Validate Loss: {val_loss}")
-
-            # check early_stop
+            print(f"{epoch+1} epoch Validate Loss: {val_result['loss']}")
             if kwargs["early_stop"]:
                 pre_model=early_stop(
-                    val_loss=val_loss,
+                    val_loss=val_result["loss"],
                     model=model
                 )
                 if early_stop.early_stop:

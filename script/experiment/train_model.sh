@@ -1,8 +1,21 @@
 #!/bin/bash
-set -e
 
-python -m app.experiment.train_model --model_name TGAT --seed 1 --lr 0.0001
+MODELS=("TGAT" "TGN" "TR-NE")
+SEEDS=(1 2 3)
+LRS=(0.0001 0.0005)
 
-python -m app.experiment.train_model --model_name TGN --seed 1 --lr 0.0001
+for MODEL in "${MODELS[@]}"; do
+    for SEED in "${SEEDS[@]}"; do
+        for LR in "${LRS[@]}"; do
+            echo "Running: model=$MODEL, seed=$SEED, lr=$LR"
 
-python -m app.experiment.train_model --model_name TR-NE --seed 1 --lr 0.0001
+            python -m app.experiment.train_model \
+                --model_name "$MODEL" \
+                --seed "$SEED" \
+                --lr "$LR" \
+                --use_mlflow 1 \
+                --experiment_name TR-NE \
+                --save_model 1
+        done
+    done
+done

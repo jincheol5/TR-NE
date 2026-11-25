@@ -14,6 +14,8 @@ def main(**kwargs):
     model_name=kwargs["model_name"]
     seed=kwargs["seed"]
     lr=kwargs["lr"]
+    use_mlflow=kwargs["use_mlflow"]
+    experiment_name=kwargs["experiment_name"]
     save_model=kwargs["save_model"]
 
     ### set seed
@@ -122,23 +124,56 @@ def main(**kwargs):
         **TRAIN_CONFIG,
         "seed":seed,
         "lr":lr,
-        "n_node":20
+        "n_node":20,
+        "batch_size":10
     }
     model_trainer=TRAINER_REGISTRY[model_name]
-    ### train model
-    model=model_trainer.train(
-        model=model,
-        train_graph_list=train_graph_list,
-        train_loader_list=train_loader_list,
-        train_TR_label_list=train_TR_label_list,
-        val_graph_list=val_graph_list,
-        val_loader_list=val_loader_list,
-        val_TR_label_list=val_TR_label_list,
-        val_sources=val_sources,
-        **train_config
-    )
-    print(f"Training completed!")
 
+    if use_mlflow:
+        ### set mlflow 
+        MLFlowUtils.setup(experiment_name=experiment_name)
+        run_name=f"{model_name}_S{seed}_LR{lr}"
+        with mlflow.start_run(run_name=run_name) as run:
+            # log hyperparameters
+            mlflow.log_params(model_config|train_config)
+
+            ### train model
+            train_config["use_mlflow"]=use_mlflow
+            model=model_trainer.train(
+                model=model,
+                train_graph_list=train_graph_list,
+                train_loader_list=train_loader_list,
+                train_TR_label_list=train_TR_label_list,
+                val_graph_list=val_graph_list,
+                val_loader_list=val_loader_list,
+                val_TR_label_list=val_TR_label_list,
+                val_sources=val_sources,
+                **train_config,
+            )
+
+            ### save model
+            if save_model:
+                MLFlowUtils.save_model(model=model,artifact_name=model_name)
+
+            # mlflow run_id
+            run_id=run.info.run_id
+        print(f"Training completed: {run_name}")
+        print(f"Run ID: {run_id}")
+    else:
+        train_config["use_mlflow"]=use_mlflow
+        ### train model
+        model=model_trainer.train(
+            model=model,
+            train_graph_list=train_graph_list,
+            train_loader_list=train_loader_list,
+            train_TR_label_list=train_TR_label_list,
+            val_graph_list=val_graph_list,
+            val_loader_list=val_loader_list,
+            val_TR_label_list=val_TR_label_list,
+            val_sources=val_sources,
+            **train_config
+        )
+        print(f"Training completed!")
 
 if __name__=="__main__":
     """
@@ -152,6 +187,8 @@ if __name__=="__main__":
     )
     parser.add_argument("--seed",type=int,choices=[1,2,3],default=1)
     parser.add_argument("--lr",type=float,choices=[0.0001,0.0005],default=0.0001)
+    parser.add_argument("--use_mlflow",type=int,default=0)
+    parser.add_argument("--experiment_name",type=str,default=f"TR-NE")
     parser.add_argument("--save_model",type=int,default=0)
     args=parser.parse_args()
     main(**vars(args))

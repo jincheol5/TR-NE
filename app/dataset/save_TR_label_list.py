@@ -13,7 +13,7 @@ Batch size:
 N20 -> B10
 N50 -> B20
 N100 -> B30
-N500 -> B200
+N500 -> B100
 N1000 -> B200
 """
 def main(**kwargs):

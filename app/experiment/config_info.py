@@ -15,7 +15,6 @@ n_head: 2
 n_neighbor: 10
 
 << 공통 모델 학습 관련 파라미터 >>
-batch_size: 200
 epoch (max_epoch): 100
 seed: 1, 2, 3
 learning_rate: 0.0001, 0.0005
@@ -162,6 +161,5 @@ TRAIN_CONFIG={
     "optimizer":"adam",
     "epoch":100,
     "early_stop":True,
-    "patience":10,
-    "batch_size":200
+    "patience":10
 }
