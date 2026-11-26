@@ -76,9 +76,9 @@ def main(experiment_name: str) -> None:
     summary = (
         pd.DataFrame(rows)
         .groupby(["model", "n_node"])[list(METRICS)]
-        .agg(["mean", "std", "count"])
+        .agg(["mean", "std"])
     )
-    print(summary.to_string(float_format=lambda value: f"{value:.6f}"))
+    print(summary.to_string(float_format=lambda value: f"{value:.4f}"))
 
 
 if __name__ == "__main__":
