@@ -37,7 +37,7 @@ class GraphMixer(nn.Module):
 
         # decoder
         self.decoder=MLP(
-            input_dim=2*(embed_dim+node_dim),
+            input_dim=embed_dim+node_dim,
             latent_dim=latent_dim,
             output_dim=1
         )
