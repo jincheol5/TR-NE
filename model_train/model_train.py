@@ -6,14 +6,14 @@ import torch.nn as nn
 import mlflow
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-from model import TGAT
+from model import TGAT,GraphMixer
 from graph import GNN_Graph
 from utils import GraphUtils,TrainUtils,EarlyStopper,MetricUtils,MLFlowUtils
 
 class Model_Trainer:
     @staticmethod
     def train(
-            model:TGAT,
+            model:TGAT|GraphMixer,
             train_graph_list:list[nx.Graph],
             train_loader_list:list[DataLoader],
             train_TR_label_list:list[torch.Tensor],
@@ -167,7 +167,7 @@ class Model_Trainer:
 
     @staticmethod
     def validate(
-            model:TGAT,
+            model:TGAT|GraphMixer,
             val_graph_list:list[nx.Graph],
             val_loader_list:list[DataLoader],
             val_TR_label_list:list[torch.Tensor],
@@ -296,7 +296,7 @@ class Model_Trainer:
 
     @staticmethod
     def test(
-            model:TGAT,
+            model:TGAT|GraphMixer,
             test_graph_list:list[nx.Graph],
             test_loader_list:list[DataLoader],
             test_TR_label_list:list[torch.Tensor],

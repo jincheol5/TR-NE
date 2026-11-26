@@ -1,4 +1,4 @@
-from model import TGAT,TGN,TR_NE
+from model import TGAT,TGN,GraphMixer,TR_NE
 from model_train import Model_Trainer,TGN_Trainer,TR_NE_Trainer
 
 """
@@ -56,12 +56,14 @@ TPNet
 MODEL_REGISTRY={
     "TGAT":TGAT,
     "TGN":TGN,
+    "GraphMixer":GraphMixer,
     "TR-NE":TR_NE
 }
 
 TRAINER_REGISTRY={
     "TGAT":Model_Trainer,
     "TGN":TGN_Trainer,
+    "GraphMixer":Model_Trainer,
     "TR-NE":TR_NE_Trainer
 }
 
