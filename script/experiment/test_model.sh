@@ -1,6 +1,7 @@
 #!/bin/bash
 
-MODELS=("TGAT" "TGN" "TR-NE")
+# MODELS=("TGAT" "TGN" "TR-NE")
+MODELS=("GraphMixer")
 SEEDS=(1 2 3)
 LRS=(0.0001 0.0005)
 
